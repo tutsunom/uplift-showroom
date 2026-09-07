@@ -77,7 +77,8 @@ image::module-2-winweb01-numcores-2.png[winweb01 numcores 2,link=self, window=bl
 NOTE: Infrastructure as Code を使って必要な再起動をトリガーすることもできます。仮想マシンを再構成した後、`virtctl` を実行する Job で仮想マシンを再起動するパイプラインを実装することも可能です。
 
 [[congratulations]]
-== おめでとうございます
+== まとめ
 
-Infrastructure as Code を使って仮想マシンのリソースを増やすことができました。
-この例から、IaC ツールやパイプラインからリソースの再構成を自動化する方法をイメージできるでしょう。
+このモジュールでは、YAML の編集による VM の CPU リソース変更を体験しました。
+この手法は IaC ツールやパイプラインからも同様に自動化できます。
+お疲れ様でした！次のモジュールに進みましょう。

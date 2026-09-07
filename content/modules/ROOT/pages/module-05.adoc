@@ -87,6 +87,7 @@ image::module-5-powershell-curl-failure.png[Powershell cURL failure,link=self, w
 WARNING: ラボの終了前に、この NetworkPolicy を削除してください。VM のネットワーク接続が制限されたままになります。
 
 [[congratulations]]
-== おめでとうございます
+== まとめ
 
-クラウドネイティブのリソースを活用して、ネットワーク Egress ファイアウォールを簡単に実装できることを確認しました。
+このモジュールでは、NetworkPolicy を使ったネットワーク Egress ファイアウォールの実装を体験しました。
+すべてのモジュールが完了です。お疲れ様でした！

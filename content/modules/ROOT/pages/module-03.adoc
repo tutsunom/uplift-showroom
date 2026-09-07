@@ -155,6 +155,7 @@ image::module-3-vm-deleting.png[winweb03 - Deleting,link=self, window=blank, wid
 WARNING: `winweb03` を削除しないと、このワークショップを最後まで完了できない可能性があります。
 
 [[congratulations]]
-== おめでとうございます
+== まとめ
 
-YAML マニフェストと仮想マシンイメージファイルだけで、仮想マシンを作成できました。
+このモジュールでは、YAML マニフェストと VM イメージだけで仮想マシンを作成・削除する手順を体験しました。
+お疲れ様でした！次のモジュールに進みましょう。

@@ -107,9 +107,7 @@ image::module-1-virtual-machine-list.png[Virtual Machines List,link=self, window
 image::module-1-virtual-machine-metrics.png[Virtual Machine Metrics,link=self, window=blank, width=100%]
 
 [[congratulations]]
-== おめでとうございます
+== まとめ
 
-おめでとうございます！
-
-OpenShift Virtualization の探索を開始しました。
-ROSA 上で仮想マシンを管理するための基本的なダッシュボードの概要を理解できました。
+このモジュールでは、ROSA クラスターへのログインと、OpenShift Virtualization のダッシュボードによる VM の確認を体験しました。
+お疲れ様でした！次のモジュールに進みましょう。

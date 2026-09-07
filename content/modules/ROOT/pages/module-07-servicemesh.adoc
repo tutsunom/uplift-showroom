@@ -1,0 +1,245 @@
+= Istio による仮想マシンのトラフィック管理
+
+== はじめに
+
+コンテナの世界において、Service Mesh（特に Istio）は最も望ましく変革的な Kubernetes 機能の一つとされています。
+Service Mesh について語るとき、*モダン*、*12 Factor*、*SOA*、コンテナ化されたアプリケーションといった言葉とともに語られ、レガシーな仮想マシンと結びつけられることはありませんでした。
+
+*UpLift and Shift* は、アプリケーションの書き換えやリプラットフォームを必要とせずに、追加の機能を提供することを目指しています。
+
+Windows IIS で Web アプリケーションが動作しており、断続的なエラーやレイテンシーが報告されている状況を想像してください。
+これらのレガシーな仮想マシンのトラブルシューティングにはどんなツールがあるでしょうか？
+
+この最後のセクションでは、Istio と Kiali の高度なネットワークテレメトリを使って、レガシーな Windows 仮想マシンのこれらの問題を簡単にトラブルシューティングする方法を紹介します。
+
+////
+
+== Service と Route の削除
+
+前のモジュールで作成した Service と Route はもう不要です。
+Service Mesh がこれらの機能をはるかに堅牢なソリューションで置き換えます。
+
+CAUTION: `windowsmesh-{user}` Namespace にいることを確認してください。
+
+. OpenShift Console の左側で *Networking -> Services* をクリックし、見つかったすべての Service を削除します。
+. Route を削除するには、*Networking -> Routes* をクリックし、見つかったすべての Route を削除します。
+
+これで、これらの機能を Service Mesh に置き換える準備が整いました。
+
+////
+
+== VM で Service Mesh を有効化
+
+. *各 winweb VM に移動* し、YAML の約 *175 行目* に `annotations:` セクションの一部として以下の行を追加します。
++
+[source,yaml,subs="+attributes",role=execute]
+----
+  annotations:
+        sidecar.istio.io/inject: "true"
+        proxy.istio.io/config: |
+          holdApplicationUntilProxyStarts: true
+          proxyMetadata:
+            ISTIO_META_DNS_CAPTURE: 'false'
+            ISTIO_META_DNS_AUTO_ALLOCATE: 'false'
+----
+
+. *データベース VM に移動* し、YAML の約 *145 行目* に `annotations:` セクションの一部として以下の行を追加します。
++
+[source,yaml,subs="+attributes",role=execute]
+----
+  sidecar.istio.io/inject: 'true'
+----
+
+== Namespace で Service Mesh を有効化
+
+管理者は、あなたのユーザーに対して Namespace の Service Mesh を有効化する権限をすでに付与しています。
+この設定方法に興味がある場合は、インストラクターにお尋ねください。
+
+Namespace で Service Mesh を有効化するには
+
+. *OpenShift Console の右上のプラス記号をクリック* します。
+. 以下の YAML を貼り付けます。
++
+[source,yaml,subs="+attributes",role=execute]
+----
+apiVersion: maistra.io/v1
+kind: ServiceMeshMember
+metadata:
+  name: default
+  namespace: windowsmesh-{user}
+spec:
+  controlPlaneRef:
+    namespace: istio-system
+    name: basic
+----
++
+. Istio サイドカーコンテナを起動するために、3 台すべての仮想マシンを再起動します。
+.. *Virtualization -> VirtualMachines* をクリックし、`windowsmesh-{user}` Project にいることを確認します。
+.. 各仮想マシンの右側にある拡張メニューを使って、それぞれを *Restart* します。
+.. サイドカーコンテナが追加されたことを確認するには、*Workload -> Pods* に移動します。
+Pod 内のコンテナ数が 2 になっているはずです。
+2 つ目のコンテナが Service Mesh のサイドカーコンテナです。
++
+NOTE: Windows 仮想マシンはグレースフルシャットダウンを行うため、再起動には 1〜2 分かかります。
+
+[[prepinfo]]
+== 情報の準備
+
+GUI を通じて以下のリソースを作成します。
+
+====
+    Route
+        （クラスターへの Ingress）
+        ↓
+    Gateway
+        （メッシュへの受信トラフィックを処理）
+        ↓
+    VirtualService
+        （メッシュ内のルーティングルールを定義）
+        ↓
+    DestinationRule
+        （VM へのトラフィックポリシーを定義）
+====
+
+以下の情報を集めて、アプリケーションの Service Mesh 有効化の準備をします。
+
+[[getroute]]
+=== Route の取得とテスト
+
+DestinationRule はいくつかの要素でポリシーを定義します。
+DestinationRule にはトラフィックの送信元を識別する `host` パラメーターがあります。
+すでに作成されている Ingress Route をその値として使用します。
+
+OpenShift Console を使って {user} の Route を見つけ、後で DestinationRule で使用するためにコピーします。
+
+. *Networking -> Routes* をクリックし、*Project `istio-system`* が選択されていることを確認します。
+. ユーザー名 `{user}` に一致する Route を特定します。
+. コピーボタンで Route の Location をコピーします。
++
+image::module-6-get-route.png[Route,link=self, window=blank, width=100%]
+. *矢印をクリックしてアプリケーションにアクセス* します。
+「Application is not available.」と表示されるはずです。
+これは、Route がトラフィックを送信する Service がまだ構成されていないためです。
+Kubernetes の Service を設定する代わりに、Service Mesh を設定しましょう！
+
+[[accesskiali]]
+== Service Mesh UI へのアクセスとリソースの確認
+
+=== Service Mesh UI: Kiali へのアクセス
+
+. {rosa_openshift_console_url}[OpenShift Console] に Cognito 経由で `{user}`（パスワード: `{password}`）でログインします。
+. 左側のドロップダウンで Administrator パースペクティブに切り替えます。
+. Kiali の Web UI を見つけるには、*Home -> Projects -> `istio-system`* をクリックします。
+右側の *Launcher* の *Kiali* image:fa-external-link-alt.png[] リンクをクリックします。
++
+image::module-6-kiali-link.png[Kiali route link,link=self, window=blank, width=100%]
++
+. {kiali_url}[Kiali Web インターフェース^] にユーザー名 `{user}` とパスワード `{password}` でログインします。
+. Kiali 内で、左側の *Services* をクリックします。
+. 上部のバーの *namespace* ドロップダウンから、自分の Namespace `windowsmesh-{user}` を選択します。
+. `winmesh` という名前の Service があることを確認します。
++
+.`winmesh` Istio Service の確認
+image::module-6-kiali-namespace-services.png[Kiali namespace,link=self, window=blank, width=100%]
++
+. *`winmesh` Service をクリック* します。2 つの *Workload*（仮想マシン `winweb01` と `winweb02`）があることを確認します。
+名前は似ていますが、これらは前のモジュールの仮想マシンとは異なるものです。
+OpenShift Service Mesh が有効化されており、異なる Project/Namespace にあります。
+
+== winmesh Service のリクエストルーティングの作成
+
+CAUTION: ここが複雑な部分です。注意深く進めてください。
+
+Web インターフェースを使って、アプリケーションを提供するための Service Mesh リソースを作成します。
+リソースがどのように連携するかを学びます。
+
+// start do content.mode == workshop/demo here
+
+. 右上の *Actions* から *Request Routing* をクリックします。
++
+.`winmesh` Istio Service とコンポーネント
+image::module-6-kiali-service-winmesh.png[winmesh Service,link=self, window=blank, width=100%]
++
+. *Route To* をクリックすると、2 台の仮想マシンが一覧表示されます。
+. 50/50 のロードバランシングを行う *Route Rule* がすでにあることを確認します。
+. *Add Route Rule* をクリックして、VirtualService となるルールを追加します。
+. 下部の *Show Advanced Options* をクリックします。
+. *Virtual Service Hosts を、上でコピーした Route に置き換え* ます。
+これにより、新しい VirtualService リソースに仮想マシンへのルートが設定されます。
++
+.リクエストルーティング
+image::module-6-kiali-request-route-virtual-hosts.png[Request Route VirtualHost,link=self, window=blank, width=100%]
++
+. *Gateways* をクリックし、*Add Gateway* をクリックします。
+. *Create Gateway* をクリックします。
+. *Gateway Hosts* に Route を貼り付けて、Gateway がメッシュに誘導するトラフィックの送信元を指定します。
+. *Gateway Hosts 名から `https://` を削除* します。
++
+.Service Mesh の Gateway
+// image::module-6-kiali-select-request-route-gateways.png[Request Route Gateway,link=self, window=blank, width=100%]
+image::module-6-kiali-create-request-route-gateways.png[Request Route Gateway,link=self, window=blank, width=100%]
++
+// end content.mode == workshop/demo here
+Preview ポップアップウィンドウに DestinationRule、Gateway、VirtualService が表示されます。
+DestinationRule は、VirtualService の一部となるリソースを示します。
+VirtualService は、各宛先へのトラフィックの割合を示します。
++
+.DestinationRule と VirtualService
+//image::module-6-kiali-request-route-dr-vs.png[DestinationRule and VirtualService,link=self, window=blank, width=100%]
+image::module-6-kiali-request-route-dr-vs-gw.png[DestinationRule Gateway and VirtualService,link=self, window=blank, width=100%]
++
+. 設定内容を確認し、*Create* をクリックします。
+. 確認ダイアログボックスを閉じます。
++
+image::module-6-create-nag.png[Create nag box,link=self, window=blank, width=100%]
+
+メッシュの構成が完了しました。
+
+image::module-6-overview-deployed.png[Overview deployed,link=self, window=blank, width=100%]
+
+NOTE: *Overview* ページにグラフの可視化が表示されるまで、1〜2 分待つ必要がある場合があります。
+
+[[visualizingtraffic]]
+== トラフィックの可視化
+
+負荷の可視化を支援するために、これらの仮想マシンと一緒に負荷生成ツールをデプロイしています。
+実際のアプリケーションにトラフィックが来ている状態を再現するために、メッシュを通じてアプリケーションにトラフィックを送信します。
+このアプリケーションが Service Mesh と Route を通じて公開されると、負荷生成ツールにより訪問者数が多く表示されます。
+
+. 左側の *Graph* をクリックします。
+. *Display* ドロップダウンボックスをクリックします。
+.. *Response Time* にチェックを入れて、リクエストレイテンシーを確認します。
+.. *Throughput* チェックボックスにチェックを入れて、データ転送レートを確認します。
+.. *Traffic Distribution* チェックボックスにチェックを入れて、ロードバランシングの割合を確認します。
+.. *Traffic Rate* チェックボックスにチェックを入れて、1 秒あたりのリクエスト数を確認します。
+.. *Traffic Animation* チェックボックスにチェックを入れて、個々のリクエストを表す小さなドットを確認します。
++
+.Kiali 詳細トラフィックグラフ
+image::module-6-kiali-graph-setup.png[Kiali Graph Set Up,link=self, window=blank, width=100%]
++
+. 右側のパネルに、リクエストのレスポンスコード（200、300、400、500 番台）が表示されることを確認します。
+
+グラフをズームイン・ズームアウトして、トラフィックの詳細を確認してください。
+
+== アプリケーションへのアクセス確認
+
+Service Mesh のセットアップが完了したので、Route を通じてインターネットからアプリケーションにアクセスできます。
+
+. アプリケーションの Route をブラウザに貼り付けます。
+. アプリケーションが動作し、負荷生成により訪問者数が多く表示されているはずです。
++
+.Service Mesh で提供されるアプリケーション（負荷生成による高い訪問者数）
+image::module-6-many-visitors.png[Kiali Graph Set Up,link=self, window=blank, width=100%]
+
+== その他のリソース
+
+以下の詳細ガイドは、Red Hat のサービスチームがお客様に一般的な Service Mesh のユースケースと構成の詳細を説明するために使用しているものです。
+
+https://www.redhat.com/en/resources/getting-started-with-openshift-service-mesh-ebook[Getting start with Red Hat OpenShift Service Mesh]
+
+[[congratulations]]
+== おめでとうございます
+
+OpenShift に組み込まれたクラウドネイティブ機能は、他のプラットフォームと比較して、はるかに堅牢で完全なプラットフォームを提供します。
+
+このワークショップが UpLift and Shift のビジョンを理解する助けとなり、新しいプラットフォームが OpenShift であれば単純なリプラットフォーム以上の価値を得られることをご理解いただけたなら幸いです。

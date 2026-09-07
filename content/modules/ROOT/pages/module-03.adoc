@@ -1,161 +1,84 @@
-= 宣言的 IaC による仮想マシンの作成自動化
+= 宣言的 IaC による VM リソースの自動化
 
 == はじめに
 
-次に、YAML タブを使って新しい仮想マシンの作成を自動化します。
-これを行うために必要な 2 つのものを用意しています。
+OpenShift と Kubernetes の利点の一つは、構成が宣言的な YAML マニフェストで管理されることです。
+OpenShift 上で動作する VM の構成も同様です。
+他のシステムでは、新しい仮想マシンインスタンスの作成や既存の仮想マシンの構成管理を自動化するために、複雑な IaC 言語の理解が必要になることがあります。
 
-. 目的の OS、基本構成、および必要に応じてデプロイ済みアプリケーションを含む仮想マシンイメージ。
-. OpenShift に仮想マシンのデプロイ方法を指示する YAML マニフェスト。
+このモジュールでは、あらゆる IaC システムで容易に採用できる手法を使って、VM に割り当てる CPU リソースを増やします。
 
-WARNING: このラボの完了後は、必ず新しい仮想マシン `winweb03` を *削除* してください。削除しないと、ワークショップの残りの演習に必要なリソースが不足します。
+[[validating]]
+== 初期 CPU コア数の確認
 
-[[yaml]]
-== YAML マニフェストを使った仮想マシンの作成
-
-. 上部のバーの *Projects:* ドロップダウンで *windowsmesh-{user}* Project を選択し、正しい Namespace にいることを確認します。
-. 右上の *VirtualMachines -> Create -> With YAML* をクリックします。
+.  変更対象の VM を見つけるには、左側のバーで *Virtualization -> VirtualMachines をクリック* します。
+上部のバーで *Project `windowsmesh-{user}`* を選択します。
 +
-.新しい仮想マシンのページを探す
-image::module-3-create-with-yaml-dropdown.png[Access virtual machine YAML,link=self, window=blank, width=100%]
+.`winweb01` 仮想マシンの特定
+image::module-2-find-winweb01-vm.png[Find winweb01 VM,width=50%,link=self, window=blank]
 +
-. *あらかじめ作成されている YAML を削除* します。
-*以下の YAML テンプレートをコピー/ペースト* します。
-*Create* をクリックすると、新しい仮想マシンが作成されます。
+.  *`winweb01` VM をクリック* します。
+*Overview* タブの CPU | Memory セクションを確認します。
 +
-.新しい仮想マシンのマニフェスト（作成準備完了）
-image::module-3-paste-yaml-and-create.png[Paste YAML and Create,link=self, window=blank, width=100%]
+.VM の CPU およびメモリ消費量
+image::module-2-winweb01-cpu-ram.png[winweb01 CPU and RAM,link=self, window=blank, width=100%]
 +
-[source,yaml,subs="+attributes",role=execute]
+. `winweb01` コンソールの PowerShell でコア数を確認します。
+.. *Console タブ* をクリックし、*黒いコンソールボックス* をクリックして VM コンソールへの入力を有効にします。
+.. *`15` を入力* して PowerShell を起動します。
++
+.Microsoft `SConfig` へのアクセス
+image::module-5-powershell-01.png[SConfig,link=self, window=blank, width=100%]
++
+.. 以下のコマンドをクリップボードに *コピー* します。
++
+[,powershell,subs="attributes",role=execute]
 ----
-apiVersion: kubevirt.io/v1
-kind: VirtualMachine
-metadata:
-  labels:
-    app: winweb03
-    app.kubernetes.io/part-of: 3-Tier-App
-    vm.kubevirt.io/template.revision: '1'
-    vm.kubevirt.io/template.version: v0.25.0
-  name: winweb03
-  namespace: "windowsmesh-{user}"
-spec:
-  dataVolumeTemplates:
-  - apiVersion: cdi.kubevirt.io/v1beta1
-    kind: DataVolume
-    metadata:
-      name: winweb03
-    spec:
-      source: # <1>
-        snapshot:
-          name: winweb03-volumesnapshot
-          namespace: default
-        # http:
-        #   url: 'http://s3.us-east.cloud-object-storage.appdomain.cloud/roadshowocpvirt/winweb01.qcow2'
-      storage:
-        resources:
-          requests:
-            storage: 90Gi
-  running: true
-  template:
-    metadata:
-      labels:
-        app: winnetworking
-    spec:
-      domain:
-        clock:
-          timer:
-            hpet:
-              present: false
-            hyperv: {}
-            pit:
-              tickPolicy: delay
-            rtc:
-              tickPolicy: catchup
-          utc: {}
-        cpu:
-          cores: 1
-          sockets: 2
-          threads: 1
-        devices:
-          disks:
-          - disk:
-              bus: sata
-            name: rootdisk
-          inputs:
-          - bus: usb
-            name: tablet
-            type: tablet
-          interfaces:
-          - masquerade: {}
-            model: e1000e
-            name: default
-        features:
-          acpi: {}
-          apic: {}
-          hyperv:
-            frequencies: {}
-            ipi: {}
-            relaxed: {}
-            reset: {}
-            runtime: {}
-            spinlocks:
-              spinlocks: 8191
-            synic: {}
-            synictimer:
-              direct: {}
-            tlbflush: {}
-            vapic: {}
-            vpindex: {}
-          smm:
-            enabled: true
-        firmware:
-          bootloader:
-            efi: {}
-        machine:
-          type: q35
-        resources:
-          requests:
-            memory: 6Gi
-      networks:
-      - name: default
-        pod: {}
-      terminationGracePeriodSeconds: 3600
-      volumes:
-      - dataVolume:
-          name: winweb03
-        name: rootdisk
+Get-CimInstance -ClassName win32_processor | Select NumberofCores
 ----
-<1> 仮想マシンイメージは、インポート済み VM イメージの PVC スナップショットをクローンして提供されます。これが最もパフォーマンスの高い方法です。
 +
-[.left]
-. 新しい `winweb03` 仮想マシンが 3 つのフェーズを経て起動する様子を確認します。
+参考として、Windows 仮想マシンの物理メモリは以下のコマンドで確認できます。
 +
-.. `WaitingForVolumeBinding` - この VM 用の新しいストレージボリュームが作成されます。
+[,powershell]
+----
+(Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum).sum /1gb
+----
 +
-image::module-3-waitingforvolumebinding.png[winweb03 - Waiting for Volume Binding,link=self, window=blank, width=100%]
+. *Paste ボタン* を使って VM コンソールに貼り付けます。
 +
-.. `Provisioning` - ターゲットの OpenShift Node の特定、コンピュートリソースの準備、VM イメージのダウンロードを行います。
-+
-image::module-3-provisioning.png[winweb03 - Provisioning,link=self, window=blank, width=100%]
-+
-.. `Running` - 仮想マシンが利用可能な状態になります。
-+
-.新しい仮想マシンが実行中になったら削除してください
-image::module-3-running.png[winweb03 - Running,link=self, window=blank, width=100%]
+.IaC 再構成前のコア数を確認するためのコンソールアクセス
+image::module-2-winweb01-numcores-1.png[winweb01 numcores 1,link=self, window=blank, width=100%]
 
-[[deleting]]
-== 仮想マシンの削除
+[[increasing]]
+== CPU コア数の増加
 
-. ワークショップクラスターのリソースを確保するため、新しい仮想マシンを *削除* してください。
-.. *Actions -> Delete* をクリックし、確認ダイアログで *Delete* をクリックしてリソースを解放します。
+. IaC を使って CPU コア数を増やすには、*YAML タブをクリック* し、`cpu` が見つかるまでスクロールします。
+約 190 行目で、`cores` の値を *1 から 2 に変更* します。
+. *Save* をクリックします。
 +
-.仮想マシンの削除を確認
-image::module-3-vm-deleting.png[winweb03 - Deleting,link=self, window=blank, width=100%]
+.YAML 編集によるコア数の変更
+image::module-2-winweb01-cpu-2-cores.png[winweb01 CPU 2 cores,link=self, window=blank, width=100%]
++
+. winweb01 VM を再起動するには、*円形の矢印* &circlearrowright; をクリックします。
+. `winweb01` VM の再起動を待ちます。
+. `winweb01` コンソールの PowerShell でコア数を確認します。
+.. *Console* タブをクリックし、黒いコンソールボックスをクリックして VM コンソールへの入力を有効にします。
+.. 先ほどと同様に、メニューで *15* を入力して PowerShell を起動します。
+.. 新しいコア数を確認するには、以下のコマンドを *コピー/ペースト* して Paste ボタンで VM コンソールに貼り付けます。
++
+[,powershell,subs="attributes",role=execute]
+----
+Get-CimInstance -ClassName win32_processor | Select NumberofCores
+----
++
+.CPU 数の実際の変更を確認
+image::module-2-winweb01-numcores-2.png[winweb01 numcores 2,link=self, window=blank, width=100%]
 
-WARNING: `winweb03` を削除しないと、このワークショップを最後まで完了できない可能性があります。
+NOTE: Infrastructure as Code を使って必要な再起動をトリガーすることもできます。仮想マシンを再構成した後、`virtctl` を実行する Job で仮想マシンを再起動するパイプラインを実装することも可能です。
 
 [[congratulations]]
 == まとめ
 
-このモジュールでは、YAML マニフェストと VM イメージだけで仮想マシンを作成・削除する手順を体験しました。
+このモジュールでは、YAML の編集による VM の CPU リソース変更を体験しました。
+この手法は IaC ツールやパイプラインからも同様に自動化できます。
 お疲れ様でした！次のモジュールに進みましょう。

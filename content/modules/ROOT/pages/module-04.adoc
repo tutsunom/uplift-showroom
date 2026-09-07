@@ -1,104 +1,161 @@
-= ロードバランシングの簡易構成
+= 宣言的 IaC による仮想マシンの作成自動化
 
 == はじめに
 
-多くのシステムでは、仮想マシンのロードバランシングには通常、複数のツールと構成が必要です。
-例えば、2 台の仮想マシンに対して内部および外部のロードバランシングを行うには、以下の作業が必要になることがあります。
+次に、YAML タブを使って新しい仮想マシンの作成を自動化します。
+これを行うために必要な 2 つのものを用意しています。
 
-* [ ] 内部ロードバランサーの作成
-* [ ] インターネット向けエンドポイントの作成と内部ロードバランサーへのルーティング
-* [ ] 内部ロードバランサー用のプライベート DNS レコードの作成
-* [ ] 外部アクセス用パブリックエンドポイントのパブリック DNS レコードの作成
-* [ ] ロードバランサーへの仮想マシンの登録
-* [ ] リスニング/フォワーディングポートまたはポート変換の構成
-* [ ] ヘルスチェックエンドポイントとテストの構成
-* [ ] ヘルスチェックのタイムアウトとインターバルの構成
+. 目的の OS、基本構成、および必要に応じてデプロイ済みアプリケーションを含む仮想マシンイメージ。
+. OpenShift に仮想マシンのデプロイ方法を指示する YAML マニフェスト。
 
-OpenShift はネットワーキングとロードバランシングを大幅に簡素化します。
-このモジュールでは、OpenShift を離れることなく、これらすべてを実現します。
+WARNING: このラボの完了後は、必ず新しい仮想マシン `winweb03` を *削除* してください。削除しないと、ワークショップの残りの演習に必要なリソースが不足します。
 
-[[setupservice]]
-== Service による内部ロードバランシングの設定
+[[yaml]]
+== YAML マニフェストを使った仮想マシンの作成
 
-Service は OpenShift における内部ロードバランサーです。
-Service は Label Selector によってリソースを識別し、トラフィックをルーティングします。
-Label は仮想マシンを含むあらゆる OpenShift リソースに適用でき、リソースの識別とグループ化に使用されます。
-ここでは、Service を作成し、仮想マシンに付与された Label を使ってロードバランシング対象の仮想マシンを特定します。
-
-. 左側のバーで *Virtualization -> VirtualMachines* をクリックし、上部のバーで *Project: `windowsmesh-{user}`* を選択します。
-. Service がロードバランシング対象を特定するための Label を確認するには、*`winweb01`* 仮想マシンをクリックします。
-*YAML タブ* をクリックし、*「app: winmesh」を検索* します。
-通常 186 行目付近にあります。
-これは両方の仮想マシンに割り当てられた任意の Label です。
+. 上部のバーの *Projects:* ドロップダウンで *windowsmesh-{user}* Project を選択し、正しい Namespace にいることを確認します。
+. 右上の *VirtualMachines -> Create -> With YAML* をクリックします。
 +
-.仮想マシンインスタンスの Label を確認
-image::module-4-find-vm-app-label.png[Find VM label app=winmesh,link=self, window=blank, width=100%]
+.新しい仮想マシンのページを探す
+image::module-3-create-with-yaml-dropdown.png[Access virtual machine YAML,link=self, window=blank, width=100%]
 +
-. コンソール左側で *Networking -> Services* を展開し、右上の *Create Service* をクリックします。
+. *あらかじめ作成されている YAML を削除* します。
+*以下の YAML テンプレートをコピー/ペースト* します。
+*Create* をクリックすると、新しい仮想マシンが作成されます。
 +
-.Service の作成を開始
-image::module-4-create-service.png[Create Service button,link=self, window=blank, width=100%]
+.新しい仮想マシンのマニフェスト（作成準備完了）
+image::module-3-paste-yaml-and-create.png[Paste YAML and Create,link=self, window=blank, width=100%]
 +
-. 仮想マシン間でロードバランシングするように Service を変更します。
-.. 4 行目で *name:* を `winmesh` に変更します。
-.. 8 行目を `app: winmesh` に変更します。
-.. 12 行目の *targetPort:* の値を `80` に変更し、左下の *「Create」をクリック* します。
-+
-.Service 構成の変更
-image::module-4-create-service-yaml.png[Create Service YAML,float="none",align="left",link=self, window=blank, width=100%]
-+
-. *Pods タブ* をクリックし、2 台の `winweb` 仮想マシンがすでに Service オブジェクトに登録されていることを確認します。
-これにより、OpenShift クラスター内のアプリケーションは、winmesh Service（ロードバランサー）を通じてこれらの仮想マシンにアクセスできるようになります。
-+
-.Label Selector で識別された Pod の確認
-image::module-4-pods-in-service.png[Pods in Service,float="none",align="left",link=self, window=blank, width=100%]
-
-[[routes]]
-== ロードバランシングへの外部アクセスの設定
-
-OpenShift は、Kubernetes の初期に Route の概念を初めて導入しました。
-Route を使って、内部 Service（ロードバランサー）を通じて仮想マシンへの外部アクセスを提供します。
-
-. 左側で *Networking -> Routes* をクリックし、*Create Route* をクリックします。
-+
-.Route の作成を開始
-image::module-4-create-route.png[Create Route,float="none",align="left",link=self, window=blank, width=100%]
-+
-. フォームを使って Route を作成します。
-.. *name:* フィールドに `winmesh` と入力します。
-.. *Service* の下のドロップダウンボックスをクリックし、先ほど作成した `winmesh` Service を選択します。
-.. *Target port* の下のドロップダウンボックスをクリックし、ポート `80` を選択します。
-.. *Secure Route* チェックボックスにチェックを入れます。
-.. *TLS termination* で `Edge` を選択します。
-.. *Insecure traffic* で `Redirect` を選択します。
-.. 最後に、左下の *Create* をクリックします。
-+
-.完成した Route
-image::module-4-create-route-form.png[Create Route form,float="none",align="left",link=self, window=blank, width=100%]
-image::module-4-create-route-form1.png[Create Route form,float="none",align="left",link=self, window=blank, width=100%]
-+
-. Route をテストします。
-中央右側の *Location* セクションを見つけます。
-*リンクをクリックして、ロードバランシングされた仮想マシンを表示します。*
-+
-.インターネット経由でアクセス可能なアプリケーション
-image::module-4-test-route.png[Test Route,float="none",align="left",link=self, window=blank, width=100%]
-+
-. 新しいブラウザウィンドウが開き、Web アプリケーションにアクセスします。
-+
-image:module-4-web-application.png[Web Application,float="none",align="left",link=self, window=blank, width=100%]
-+
-. Route は OpenShift 内部の HAProxy によって実装されています。
-デフォルトでは、Cookie に基づくスティッキーセッションが有効です。
-必要に応じて、Cookie とスティッキーセッションを無効にするよう Route を更新できます。
-+
-[,sh,role=execute]
+[source,yaml,subs="+attributes",role=execute]
 ----
-oc annotate route winmesh haproxy.router.openshift.io/disable_cookies='true'
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  labels:
+    app: winweb03
+    app.kubernetes.io/part-of: 3-Tier-App
+    vm.kubevirt.io/template.revision: '1'
+    vm.kubevirt.io/template.version: v0.25.0
+  name: winweb03
+  namespace: "windowsmesh-{user}"
+spec:
+  dataVolumeTemplates:
+  - apiVersion: cdi.kubevirt.io/v1beta1
+    kind: DataVolume
+    metadata:
+      name: winweb03
+    spec:
+      source: # <1>
+        snapshot:
+          name: winweb03-volumesnapshot
+          namespace: default
+        # http:
+        #   url: 'http://s3.us-east.cloud-object-storage.appdomain.cloud/roadshowocpvirt/winweb01.qcow2'
+      storage:
+        resources:
+          requests:
+            storage: 90Gi
+  running: true
+  template:
+    metadata:
+      labels:
+        app: winnetworking
+    spec:
+      domain:
+        clock:
+          timer:
+            hpet:
+              present: false
+            hyperv: {}
+            pit:
+              tickPolicy: delay
+            rtc:
+              tickPolicy: catchup
+          utc: {}
+        cpu:
+          cores: 1
+          sockets: 2
+          threads: 1
+        devices:
+          disks:
+          - disk:
+              bus: sata
+            name: rootdisk
+          inputs:
+          - bus: usb
+            name: tablet
+            type: tablet
+          interfaces:
+          - masquerade: {}
+            model: e1000e
+            name: default
+        features:
+          acpi: {}
+          apic: {}
+          hyperv:
+            frequencies: {}
+            ipi: {}
+            relaxed: {}
+            reset: {}
+            runtime: {}
+            spinlocks:
+              spinlocks: 8191
+            synic: {}
+            synictimer:
+              direct: {}
+            tlbflush: {}
+            vapic: {}
+            vpindex: {}
+          smm:
+            enabled: true
+        firmware:
+          bootloader:
+            efi: {}
+        machine:
+          type: q35
+        resources:
+          requests:
+            memory: 6Gi
+      networks:
+      - name: default
+        pod: {}
+      terminationGracePeriodSeconds: 3600
+      volumes:
+      - dataVolume:
+          name: winweb03
+        name: rootdisk
 ----
+<1> 仮想マシンイメージは、インポート済み VM イメージの PVC スナップショットをクローンして提供されます。これが最もパフォーマンスの高い方法です。
++
+[.left]
+. 新しい `winweb03` 仮想マシンが 3 つのフェーズを経て起動する様子を確認します。
++
+.. `WaitingForVolumeBinding` - この VM 用の新しいストレージボリュームが作成されます。
++
+image::module-3-waitingforvolumebinding.png[winweb03 - Waiting for Volume Binding,link=self, window=blank, width=100%]
++
+.. `Provisioning` - ターゲットの OpenShift Node の特定、コンピュートリソースの準備、VM イメージのダウンロードを行います。
++
+image::module-3-provisioning.png[winweb03 - Provisioning,link=self, window=blank, width=100%]
++
+.. `Running` - 仮想マシンが利用可能な状態になります。
++
+.新しい仮想マシンが実行中になったら削除してください
+image::module-3-running.png[winweb03 - Running,link=self, window=blank, width=100%]
+
+[[deleting]]
+== 仮想マシンの削除
+
+. ワークショップクラスターのリソースを確保するため、新しい仮想マシンを *削除* してください。
+.. *Actions -> Delete* をクリックし、確認ダイアログで *Delete* をクリックしてリソースを解放します。
++
+.仮想マシンの削除を確認
+image::module-3-vm-deleting.png[winweb03 - Deleting,link=self, window=blank, width=100%]
+
+WARNING: `winweb03` を削除しないと、このワークショップを最後まで完了できない可能性があります。
 
 [[congratulations]]
 == まとめ
 
-このモジュールでは、Kubernetes の Service による内部ロードバランシングと、OpenShift の Route によるインターネット公開を体験しました。
+このモジュールでは、YAML マニフェストと VM イメージだけで仮想マシンを作成・削除する手順を体験しました。
 お疲れ様でした！次のモジュールに進みましょう。

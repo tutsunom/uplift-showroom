@@ -1,93 +1,104 @@
-= ネットワーク Egress ファイアウォール
+= ロードバランシングの簡易構成
 
 == はじめに
 
-セキュリティはあらゆる組織にとって重要です。
-最小権限の原則は、アプリケーションのアクセスを運用に必要なリソースのみに制限する一般的なセキュリティプラクティスです。
-例えば、アプリケーションがインターネットアクセスを必要としないことが分かっている場合、そのアプリケーションのインターネットアクセスをブロックするポリシーを作成すべきです。
+多くのシステムでは、仮想マシンのロードバランシングには通常、複数のツールと構成が必要です。
+例えば、2 台の仮想マシンに対して内部および外部のロードバランシングを行うには、以下の作業が必要になることがあります。
 
-実際の環境では、アウトバウンドプロキシ/VLAN/ファイアウォールでこの課題を解決しますが、これらのソリューションは高コストで実装が複雑になりがちです。
-ここでは、OpenShift Virtualization を使って、わずか数クリックでセキュリティレイヤーを追加できることを示します。
+* [ ] 内部ロードバランサーの作成
+* [ ] インターネット向けエンドポイントの作成と内部ロードバランサーへのルーティング
+* [ ] 内部ロードバランサー用のプライベート DNS レコードの作成
+* [ ] 外部アクセス用パブリックエンドポイントのパブリック DNS レコードの作成
+* [ ] ロードバランサーへの仮想マシンの登録
+* [ ] リスニング/フォワーディングポートまたはポート変換の構成
+* [ ] ヘルスチェックエンドポイントとテストの構成
+* [ ] ヘルスチェックのタイムアウトとインターバルの構成
 
-このモジュールでは、OpenShift に組み込まれたクラウドネイティブ機能を使って、Windows 仮想マシンからインターネットへの Egress アクセスをブロックするテストを行います。
+OpenShift はネットワーキングとロードバランシングを大幅に簡素化します。
+このモジュールでは、OpenShift を離れることなく、これらすべてを実現します。
 
-[[access]]
-== Windows 仮想マシンからのインターネットアクセス
+[[setupservice]]
+== Service による内部ロードバランシングの設定
 
-. *VirtualMachines* をクリックし、*winweb01* をクリックしてから *Console タブ* をクリックします。
-Windows 仮想マシンの管理インターフェースにすでにログインしています。
+Service は OpenShift における内部ロードバランサーです。
+Service は Label Selector によってリソースを識別し、トラフィックをルーティングします。
+Label は仮想マシンを含むあらゆる OpenShift リソースに適用でき、リソースの識別とグループ化に使用されます。
+ここでは、Service を作成し、仮想マシンに付与された Label を使ってロードバランシング対象の仮想マシンを特定します。
+
+. 左側のバーで *Virtualization -> VirtualMachines* をクリックし、上部のバーで *Project: `windowsmesh-{user}`* を選択します。
+. Service がロードバランシング対象を特定するための Label を確認するには、*`winweb01`* 仮想マシンをクリックします。
+*YAML タブ* をクリックし、*「app: winmesh」を検索* します。
+通常 186 行目付近にあります。
+これは両方の仮想マシンに割り当てられた任意の Label です。
 +
-.`winweb01` 仮想マシンのコンソールを開く
-image::module-5-winweb01-console.png[Windows virtual machine console,link=self, window=blank, width=100%]
+.仮想マシンインスタンスの Label を確認
+image::module-4-find-vm-app-label.png[Find VM label app=winmesh,link=self, window=blank, width=100%]
++
+. コンソール左側で *Networking -> Services* を展開し、右上の *Create Service* をクリックします。
++
+.Service の作成を開始
+image::module-4-create-service.png[Create Service button,link=self, window=blank, width=100%]
++
+. 仮想マシン間でロードバランシングするように Service を変更します。
+.. 4 行目で *name:* を `winmesh` に変更します。
+.. 8 行目を `app: winmesh` に変更します。
+.. 12 行目の *targetPort:* の値を `80` に変更し、左下の *「Create」をクリック* します。
++
+.Service 構成の変更
+image::module-4-create-service-yaml.png[Create Service YAML,float="none",align="left",link=self, window=blank, width=100%]
++
+. *Pods タブ* をクリックし、2 台の `winweb` 仮想マシンがすでに Service オブジェクトに登録されていることを確認します。
+これにより、OpenShift クラスター内のアプリケーションは、winmesh Service（ロードバランサー）を通じてこれらの仮想マシンにアクセスできるようになります。
++
+.Label Selector で識別された Pod の確認
+image::module-4-pods-in-service.png[Pods in Service,float="none",align="left",link=self, window=blank, width=100%]
 
-. *`15` と入力* して *Enter* キーを押し、PowerShell を起動します。
+[[routes]]
+== ロードバランシングへの外部アクセスの設定
+
+OpenShift は、Kubernetes の初期に Route の概念を初めて導入しました。
+Route を使って、内部 Service（ロードバランサー）を通じて仮想マシンへの外部アクセスを提供します。
+
+. 左側で *Networking -> Routes* をクリックし、*Create Route* をクリックします。
 +
-.PowerShell の起動
-image::module-5-powershell-01.png[Powershell Activation,link=self, window=blank, width=100%]
+.Route の作成を開始
+image::module-4-create-route.png[Create Route,float="none",align="left",link=self, window=blank, width=100%]
 +
-. 以下のコマンドを *コピー* し、*特殊な Paste ボタン* で仮想マシンコンソールに貼り付けます。
-仮想マシンコンソールをクリックして *Enter* キーを押します。
-接続が成功し、`StatusCode: 200` と表示されることを確認します。
+. フォームを使って Route を作成します。
+.. *name:* フィールドに `winmesh` と入力します。
+.. *Service* の下のドロップダウンボックスをクリックし、先ほど作成した `winmesh` Service を選択します。
+.. *Target port* の下のドロップダウンボックスをクリックし、ポート `80` を選択します。
+.. *Secure Route* チェックボックスにチェックを入れます。
+.. *TLS termination* で `Edge` を選択します。
+.. *Insecure traffic* で `Redirect` を選択します。
+.. 最後に、左下の *Create* をクリックします。
 +
-[,console,subs="attributes",role=execute]
+.完成した Route
+image::module-4-create-route-form.png[Create Route form,float="none",align="left",link=self, window=blank, width=100%]
+image::module-4-create-route-form1.png[Create Route form,float="none",align="left",link=self, window=blank, width=100%]
++
+. Route をテストします。
+中央右側の *Location* セクションを見つけます。
+*リンクをクリックして、ロードバランシングされた仮想マシンを表示します。*
++
+.インターネット経由でアクセス可能なアプリケーション
+image::module-4-test-route.png[Test Route,float="none",align="left",link=self, window=blank, width=100%]
++
+. 新しいブラウザウィンドウが開き、Web アプリケーションにアクセスします。
++
+image:module-4-web-application.png[Web Application,float="none",align="left",link=self, window=blank, width=100%]
++
+. Route は OpenShift 内部の HAProxy によって実装されています。
+デフォルトでは、Cookie に基づくスティッキーセッションが有効です。
+必要に応じて、Cookie とスティッキーセッションを無効にするよう Route を更新できます。
++
+[,sh,role=execute]
 ----
-curl google.com -UseBasicParsing -TimeoutSec 1 | findstr StatusCode
+oc annotate route winmesh haproxy.router.openshift.io/disable_cookies='true'
 ----
-+
-.PowerShell cURL 成功: `StatusCode: 200`
-image::module-5-powershell-curl-success.png[Powershell cURL success,link=self, window=blank, width=100%]
-
-[[policy]]
-== Egress をブロックする NetworkPolicy の実装
-
-. 左側で *Networking -> NetworkPolicies -> Create NetworkPolicy* をクリックします。
-+
-.NetworkPolicy の作成を開始
-image::module-5-netpol-create.png[Create NetworkPolicy,link=self, window=blank, width=100%]
-+
-. YAML View ラジオボタンを選択します。
-+
-.YAML マニフェストを使った NetworkPolicy の作成
-image::module-5-netpol-complete.png[NetworkPolicy Complete,link=self, window=blank, width=100%]
-+
-. サンプル YAML を以下の NetworkPolicy に置き換えます。
-+
-[,yaml,subs="attributes",role=execute]
-----
-kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
-metadata:
- name: noegress
- namespace: windowsmesh-{user}
-spec:
- podSelector:
-   matchLabels:
-     app: winmesh
- policyTypes:
-   - Egress
-----
-+
-. コンソールが以下のようになったら *Create をクリック* します。
-
-[[validate]]
-== Windows 仮想マシンからのインターネットアクセスがブロックされたことを確認
-
-. PowerShell に戻り、インターネットへのネットワーク接続をテストします。
-*Virtualization -> VirtualMachines -> winweb01 -> Console* をクリックします。
-コンソールをクリックし、インターネットアクセスのテストを繰り返します。
-*同じコマンドを再実行するには、上矢印キーを押して Enter を押します。*
-+
-.cURL インターネットアクセステストの失敗
-image::module-5-powershell-curl-failure.png[Powershell cURL failure,link=self, window=blank, width=100%]
-+
-インターネットへの Egress 接続がタイムアウトで拒否されました。
-
-== No-Egress ポリシーの削除
-
-WARNING: ラボの終了前に、この NetworkPolicy を削除してください。VM のネットワーク接続が制限されたままになります。
 
 [[congratulations]]
 == まとめ
 
-このモジュールでは、NetworkPolicy を使ったネットワーク Egress ファイアウォールの実装を体験しました。
-すべてのモジュールが完了です。お疲れ様でした！
+このモジュールでは、Kubernetes の Service による内部ロードバランシングと、OpenShift の Route によるインターネット公開を体験しました。
+お疲れ様でした！次のモジュールに進みましょう。

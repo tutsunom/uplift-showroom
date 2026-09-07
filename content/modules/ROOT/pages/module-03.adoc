@@ -1,29 +1,29 @@
-= Declarative IaC for Automating Virtual Machine Creation
+= 宣言的 IaC による仮想マシンの作成自動化
 
-== Introduction
+== はじめに
 
-Now you will use the YAML tab to automate the creation of a new virtual machine.
-We've provided the two things you need to do this:
+次に、YAML タブを使って新しい仮想マシンの作成を自動化します。
+これを行うために必要な 2 つのものを用意しています。
 
-. A virtual machine image of the desired OS, its basic configuration, and if appropriate, the apps deployed.
-. The YAML manifest to instruct OpenShift how to deploy the virtual machine.
+. 目的の OS、基本構成、および必要に応じてデプロイ済みアプリケーションを含む仮想マシンイメージ。
+. OpenShift に仮想マシンのデプロイ方法を指示する YAML マニフェスト。
 
-WARNING: Please don't forget to *delete this new virtual machine `winweb03`* when done with this lab.
-If you do not, there will not be resources available to finish the workshop.
+WARNING: このラボの完了後は、必ず新しい仮想マシン `winweb03` を *削除* してください。削除しないと、ワークショップの残りの演習に必要なリソースが不足します。
 
 [[yaml]]
-== Use the YAML manifest to create the virtual machine
-. Make sure you're in the proper namespace by using the *Projects:* drop-down on the top bar to select the *windowsmesh-{user}* project.
-. Click *VirtualMachines -> Create -> With YAML* in the top right corner.
+== YAML マニフェストを使った仮想マシンの作成
+
+. 上部のバーの *Projects:* ドロップダウンで *windowsmesh-{user}* Project を選択し、正しい Namespace にいることを確認します。
+. 右上の *VirtualMachines -> Create -> With YAML* をクリックします。
 +
-.Locating the new virtual machine page
+.新しい仮想マシンのページを探す
 image::module-3-create-with-yaml-dropdown.png[Access virtual machine YAML,link=self, window=blank, width=100%]
 +
-. *Delete the pre-created YAML*.
-*Copy/Paste the YAML template below*.
-Click *Create* and notice the new virtual machine is created.
+. *あらかじめ作成されている YAML を削除* します。
+*以下の YAML テンプレートをコピー/ペースト* します。
+*Create* をクリックすると、新しい仮想マシンが作成されます。
 +
-.New virtual machine manifest ready to create
+.新しい仮想マシンのマニフェスト（作成準備完了）
 image::module-3-paste-yaml-and-create.png[Paste YAML and Create,link=self, window=blank, width=100%]
 +
 [source,yaml,subs="+attributes",role=execute]
@@ -125,37 +125,36 @@ spec:
           name: winweb03
         name: rootdisk
 ----
-<1> The virtual machine image is supplied by cloning a snapshot of a PVC of the imported virtual machine image ISO.
-This is the highest performing method.
+<1> 仮想マシンイメージは、インポート済み VM イメージの PVC スナップショットをクローンして提供されます。これが最もパフォーマンスの高い方法です。
 +
 [.left]
-. Watch the new `winweb03` virtual machine go through three phases:
+. 新しい `winweb03` 仮想マシンが 3 つのフェーズを経て起動する様子を確認します。
 +
-.. `WaitingForVolumeBinding` - a new storage volume is created for this vm.
+.. `WaitingForVolumeBinding` - この VM 用の新しいストレージボリュームが作成されます。
 +
 image::module-3-waitingforvolumebinding.png[winweb03 - Waiting for Volume Binding,link=self, window=blank, width=100%]
 +
-.. `Provisioning` - identifying the target OpenShift Node, marshalling the compute resources, downloading the vm image.
+.. `Provisioning` - ターゲットの OpenShift Node の特定、コンピュートリソースの準備、VM イメージのダウンロードを行います。
 +
 image::module-3-provisioning.png[winweb03 - Provisioning,link=self, window=blank, width=100%]
 +
-.. `Running` - the virtual machine is available.
+.. `Running` - 仮想マシンが利用可能な状態になります。
 +
-.New virtual machine is running, go ahead and delete it
+.新しい仮想マシンが実行中になったら削除してください
 image::module-3-running.png[winweb03 - Running,link=self, window=blank, width=100%]
 
 [[deleting]]
-== Deleting the Virtual Machine
+== 仮想マシンの削除
 
-. Please *Delete* the new virtual machine to make room on the workshop cluster for later activities.
-.. Click *Actions -> Delete* and then on the nag window, click *Delete* to free up resources.
+. ワークショップクラスターのリソースを確保するため、新しい仮想マシンを *削除* してください。
+.. *Actions -> Delete* をクリックし、確認ダイアログで *Delete* をクリックしてリソースを解放します。
 +
-.Confirm virtual machine deletion
+.仮想マシンの削除を確認
 image::module-3-vm-deleting.png[winweb03 - Deleting,link=self, window=blank, width=100%]
 
-WARNING: If you don't delete `winweb03` you are likely not going to be able to finish this workshop.
+WARNING: `winweb03` を削除しないと、このワークショップを最後まで完了できない可能性があります。
 
 [[congratulations]]
-== Congratulations
+== おめでとうございます
 
-You created a virtual machine with nothing but a YAML manifest and a virtual machine image file.
+YAML マニフェストと仮想マシンイメージファイルだけで、仮想マシンを作成できました。

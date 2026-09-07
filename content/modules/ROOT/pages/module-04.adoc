@@ -1,96 +1,96 @@
-= Simplified configuration for load balancing
+= ロードバランシングの簡易構成
 
-== Introduction
+== はじめに
 
-In most systems, load balancing virtual machiness typically requires multiple different tools and configurations to work properly.
-For example, to load balance two virtual machines internally and externally you might have to:
+多くのシステムでは、仮想マシンのロードバランシングには通常、複数のツールと構成が必要です。
+例えば、2 台の仮想マシンに対して内部および外部のロードバランシングを行うには、以下の作業が必要になることがあります。
 
-* [ ] Create a private internal load balancer
-* [ ] Create an internet facing endpoint and route it to the internal load balancer
-* [ ] Create private DNS records for the internal load balancer
-* [ ] Create public DNS records for the public endpoint for external access
-* [ ] Register virtual machines with the load balancer
-* [ ] Configure the listening/forwarding port or port translation
-* [ ] Configure health check endpoints and tests
-* [ ] Configure health check timeouts and intervals
+* [ ] 内部ロードバランサーの作成
+* [ ] インターネット向けエンドポイントの作成と内部ロードバランサーへのルーティング
+* [ ] 内部ロードバランサー用のプライベート DNS レコードの作成
+* [ ] 外部アクセス用パブリックエンドポイントのパブリック DNS レコードの作成
+* [ ] ロードバランサーへの仮想マシンの登録
+* [ ] リスニング/フォワーディングポートまたはポート変換の構成
+* [ ] ヘルスチェックエンドポイントとテストの構成
+* [ ] ヘルスチェックのタイムアウトとインターバルの構成
 
-OpenShift trivializes networking and load balancing.
-In this module, you'll accomplish all of this, without leaving OpenShift.
+OpenShift はネットワーキングとロードバランシングを大幅に簡素化します。
+このモジュールでは、OpenShift を離れることなく、これらすべてを実現します。
 
 [[setupservice]]
-== Set up internal load balancing with Services
+== Service による内部ロードバランシングの設定
 
-Services are internal load balancers in OpenShift.
-Services route traffic to resources by identifing them with a label selector.
-Labels can be applied to any OpenShift resources, including virtual machines,to identify and group them.
-You will create a service and identify the virtual machines it services as a load balancer by means of labels on the virtual machines.
+Service は OpenShift における内部ロードバランサーです。
+Service は Label Selector によってリソースを識別し、トラフィックをルーティングします。
+Label は仮想マシンを含むあらゆる OpenShift リソースに適用でき、リソースの識別とグループ化に使用されます。
+ここでは、Service を作成し、仮想マシンに付与された Label を使ってロードバランシング対象の仮想マシンを特定します。
 
-. On the left bar, click the *Virtualization -> VirtualMachines* and on the top bar select the *Project: `windowsmesh-{user}`*
-. To find the label on the virtual machine that will identify it to the Service for selection, *click on the `winweb01`* virtual machine.
-*Click the YAML tab* and *search for "app: winmesh"*.
-It's usualy near line 186.
-This is an arbitrary label assigned to both virtual machines.
+. 左側のバーで *Virtualization -> VirtualMachines* をクリックし、上部のバーで *Project: `windowsmesh-{user}`* を選択します。
+. Service がロードバランシング対象を特定するための Label を確認するには、*`winweb01`* 仮想マシンをクリックします。
+*YAML タブ* をクリックし、*「app: winmesh」を検索* します。
+通常 186 行目付近にあります。
+これは両方の仮想マシンに割り当てられた任意の Label です。
 +
-.Identify the label on the virtual machine instance
+.仮想マシンインスタンスの Label を確認
 image::module-4-find-vm-app-label.png[Find VM label app=winmesh,link=self, window=blank, width=100%]
 +
-. On the left side of the console, click to expand *Networking -> Services* and on the top right corner, click *Create Service*.
+. コンソール左側で *Networking -> Services* を展開し、右上の *Create Service* をクリックします。
 +
-.Begin Service creation
+.Service の作成を開始
 image::module-4-create-service.png[Create Service button,link=self, window=blank, width=100%]
 +
-. Modify the Service to load balance between virtual machines
-.. On line 4, change the *name:* to `winmesh`.
-.. Modify line 8 to read `app: winmesh`
-.. Change the *targetPort:* value on line 12 to `80` then *click "Create"* in the bottom left corner
+. 仮想マシン間でロードバランシングするように Service を変更します。
+.. 4 行目で *name:* を `winmesh` に変更します。
+.. 8 行目を `app: winmesh` に変更します。
+.. 12 行目の *targetPort:* の値を `80` に変更し、左下の *「Create」をクリック* します。
 +
-.Modify the Service configuration
+.Service 構成の変更
 image::module-4-create-service-yaml.png[Create Service YAML,float="none",align="left",link=self, window=blank, width=100%]
 +
-. Click the *Pods tab* and notice that the two `winweb` virtual machines have already registered with the service object.
-This will allow applications within the OpenShift cluster to access these virtual machines through the winmesh Service, aka "load balancer".
+. *Pods タブ* をクリックし、2 台の `winweb` 仮想マシンがすでに Service オブジェクトに登録されていることを確認します。
+これにより、OpenShift クラスター内のアプリケーションは、winmesh Service（ロードバランサー）を通じてこれらの仮想マシンにアクセスできるようになります。
 +
-.Examine Pods identified by the label selector
+.Label Selector で識別された Pod の確認
 image::module-4-pods-in-service.png[Pods in Service,float="none",align="left",link=self, window=blank, width=100%]
 
 [[routes]]
-== Set Up External Access to Load Balancing
+== ロードバランシングへの外部アクセスの設定
 
-OpenShift was the first to introduce the concept of Routes in the early days of Kubernetes.
-Use a Route to provide external access to the virtuals machines through the internal Service, aka, load balancer.
+OpenShift は、Kubernetes の初期に Route の概念を初めて導入しました。
+Route を使って、内部 Service（ロードバランサー）を通じて仮想マシンへの外部アクセスを提供します。
 
-. On the left side, Click *Networking -> Routes* and then click *Create Route*.
+. 左側で *Networking -> Routes* をクリックし、*Create Route* をクリックします。
 +
-.Begin Route creation
+.Route の作成を開始
 image::module-4-create-route.png[Create Route,float="none",align="left",link=self, window=blank, width=100%]
 +
-. Use the form to create the Route.
-.. In the *name:* field put `winmesh`.
-.. Click the drop down box below *Service* and select the `winmesh` Service you just created.
-.. Click the drop down box below *Target port* and select port `80`.
-.. Tick the *Secure Route* checkbox.
-.. Under *TLS termination*, select `Edge`.
-.. Under *Insecure traffic*, select `Redirect`.
-.. Finally, click *Create* in the bottom left corner.
+. フォームを使って Route を作成します。
+.. *name:* フィールドに `winmesh` と入力します。
+.. *Service* の下のドロップダウンボックスをクリックし、先ほど作成した `winmesh` Service を選択します。
+.. *Target port* の下のドロップダウンボックスをクリックし、ポート `80` を選択します。
+.. *Secure Route* チェックボックスにチェックを入れます。
+.. *TLS termination* で `Edge` を選択します。
+.. *Insecure traffic* で `Redirect` を選択します。
+.. 最後に、左下の *Create* をクリックします。
 +
-.Completed Route
+.完成した Route
 image::module-4-create-route-form.png[Create Route form,float="none",align="left",link=self, window=blank, width=100%]
 image::module-4-create-route-form1.png[Create Route form,float="none",align="left",link=self, window=blank, width=100%]
 +
-. Test the Route.
-In the middle right, find the *Location* section.
-*Click the link to view your load balanced virtual machines.*
+. Route をテストします。
+中央右側の *Location* セクションを見つけます。
+*リンクをクリックして、ロードバランシングされた仮想マシンを表示します。*
 +
-.Functioning application accessed via the Internet
+.インターネット経由でアクセス可能なアプリケーション
 image::module-4-test-route.png[Test Route,float="none",align="left",link=self, window=blank, width=100%]
 +
-. A new browser window opens and accesses the web application.
+. 新しいブラウザウィンドウが開き、Web アプリケーションにアクセスします。
 +
 image:module-4-web-application.png[Web Application,float="none",align="left",link=self, window=blank, width=100%]
 +
-. Routes are implemented by HAProxy inside OpenShift.
-By default, they are sticky sessions based on cookies.
-If you'd like, update the Route to disable cookies and sticky sessions.
+. Route は OpenShift 内部の HAProxy によって実装されています。
+デフォルトでは、Cookie に基づくスティッキーセッションが有効です。
+必要に応じて、Cookie とスティッキーセッションを無効にするよう Route を更新できます。
 +
 [,sh,role=execute]
 ----
@@ -98,6 +98,6 @@ oc annotate route winmesh haproxy.router.openshift.io/disable_cookies='true'
 ----
 
 [[congratulations]]
-== Congratulations
+== おめでとうございます
 
-You've implemented internal load balancing through kubernetes Services, and accessed them via the Internet through OpenShift Routes.
+Kubernetes の Service による内部ロードバランシングを実装し、OpenShift の Route を通じてインターネットからアクセスできるようにしました。

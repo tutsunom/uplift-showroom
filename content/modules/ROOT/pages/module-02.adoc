@@ -1,84 +1,83 @@
-= Declarative IaC for Automating VM Resources
+= 宣言的 IaC による VM リソースの自動化
 
-== Introduction
+== はじめに
 
-One of the advantages of OpenShift and Kubernetes is that its configuration is managed with declarative YAML manifests.
-The configuration of VMs running on OpenShift is the same.
-In other systems, automating the creation of new virtual machine instances or managing the configuration of existing virtual machines often requires an understanding of complex IaC languages.
+OpenShift と Kubernetes の利点の一つは、構成が宣言的な YAML マニフェストで管理されることです。
+OpenShift 上で動作する VM の構成も同様です。
+他のシステムでは、新しい仮想マシンインスタンスの作成や既存の仮想マシンの構成管理を自動化するために、複雑な IaC 言語の理解が必要になることがあります。
 
-In this module you will increase the CPU resources dedicated to a VM using techniques easily adopted by any IaC system.
+このモジュールでは、あらゆる IaC システムで容易に採用できる手法を使って、VM に割り当てる CPU リソースを増やします。
 
 [[validating]]
-== Verifying Initial CPU Core Count
+== 初期 CPU コア数の確認
 
-.  To find the VM to change, click on the left bar, *click Virtualization -> VirtualMachines*
-On the top bar, select the *Project `windowsmesh-{user}`*.
+.  変更対象の VM を見つけるには、左側のバーで *Virtualization -> VirtualMachines をクリック* します。
+上部のバーで *Project `windowsmesh-{user}`* を選択します。
 +
-.Identifying the `winweb01` virtual machine
+.`winweb01` 仮想マシンの特定
 image::module-2-find-winweb01-vm.png[Find winweb01 VM,width=50%,link=self, window=blank]
 +
-.  *Click on the `winweb01` VM*.
-Notice the CPU | Memory section on the *Overview* tab.
+.  *`winweb01` VM をクリック* します。
+*Overview* タブの CPU | Memory セクションを確認します。
 +
-.CPU and Memory consumption of the VM
+.VM の CPU およびメモリ消費量
 image::module-2-winweb01-cpu-ram.png[winweb01 CPU and RAM,link=self, window=blank, width=100%]
 +
-. Verify the number of cores via powershell in the `winweb01` console.
-.. Click on the *Console tab*, and click into the *black console box* to activate input into the VM console.
-.. Start Powershell by *entering `15`* in the menu.
+. `winweb01` コンソールの PowerShell でコア数を確認します。
+.. *Console タブ* をクリックし、*黒いコンソールボックス* をクリックして VM コンソールへの入力を有効にします。
+.. *`15` を入力* して PowerShell を起動します。
 +
-.Accessing MicroSoft `SConfig`
+.Microsoft `SConfig` へのアクセス
 image::module-5-powershell-01.png[SConfig,link=self, window=blank, width=100%]
 +
-.. *Copy* the following command into your clipboard.
+.. 以下のコマンドをクリップボードに *コピー* します。
 +
 [,powershell,subs="attributes",role=execute]
 ----
 Get-CimInstance -ClassName win32_processor | Select NumberofCores
 ----
 +
-For reference, you get get the physical MEMORY of the Windows virtual machine as follows
+参考として、Windows 仮想マシンの物理メモリは以下のコマンドで確認できます。
 +
 [,powershell]
 ----
 (Get-CimInstance Win32_PhysicalMemory | Measure-Object -Property capacity -Sum).sum /1gb
 ----
 +
-. Now *paste* it into the VM console with the *Paste button*.
+. *Paste ボタン* を使って VM コンソールに貼り付けます。
 +
-.Accessing the console to view number of cores before IaC reconfiguration
+.IaC 再構成前のコア数を確認するためのコンソールアクセス
 image::module-2-winweb01-numcores-1.png[winweb01 numcores 1,link=self, window=blank, width=100%]
 
 [[increasing]]
-== Increasing CPU Core Count
+== CPU コア数の増加
 
-. To increase the CPU core count via IaC, *click the YAML tab* and scroll down until you see `cpu`.
-On approximately line 190, modify `cores` to increase the core count from *1 to 2*.
-. Click *Save*
+. IaC を使って CPU コア数を増やすには、*YAML タブをクリック* し、`cpu` が見つかるまでスクロールします。
+約 190 行目で、`cores` の値を *1 から 2 に変更* します。
+. *Save* をクリックします。
 +
-.Changing the number of cores with a YAML edit
+.YAML 編集によるコア数の変更
 image::module-2-winweb01-cpu-2-cores.png[winweb01 CPU 2 cores,link=self, window=blank, width=100%]
 +
-. To restart the winweb01 VM, click the *circular arrow* &circlearrowright;.
-. Wait for the `winweb01` VM to restart.
-. Verify the number of cores via Powershell in the `winweb01` console.
-.. Click on the *Console* tab, and click into the black console box to activate input into the VM console.
-.. As before, start Powershell by entering *15* in the menu.
-.. To reveal the new number of cores, *Copy/Paste* the following command into the VM console with the Paste button.
+. winweb01 VM を再起動するには、*円形の矢印* &circlearrowright; をクリックします。
+. `winweb01` VM の再起動を待ちます。
+. `winweb01` コンソールの PowerShell でコア数を確認します。
+.. *Console* タブをクリックし、黒いコンソールボックスをクリックして VM コンソールへの入力を有効にします。
+.. 先ほどと同様に、メニューで *15* を入力して PowerShell を起動します。
+.. 新しいコア数を確認するには、以下のコマンドを *コピー/ペースト* して Paste ボタンで VM コンソールに貼り付けます。
 +
 [,powershell,subs="attributes",role=execute]
 ----
 Get-CimInstance -ClassName win32_processor | Select NumberofCores
 ----
 +
-.Verifying actual change to number of CPUs
+.CPU 数の実際の変更を確認
 image::module-2-winweb01-numcores-2.png[winweb01 numcores 2,link=self, window=blank, width=100%]
 
-NOTE: You can also use Infrastructure as Code to trigger the necessary restart.
-You could  implement a pipeline that reconfigures the virtual machine, then uses a Job running `virtctl` to restart the virtual machine.
+NOTE: Infrastructure as Code を使って必要な再起動をトリガーすることもできます。仮想マシンを再構成した後、`virtctl` を実行する Job で仮想マシンを再起動するパイプラインを実装することも可能です。
 
 [[congratulations]]
-== Congratulations
+== おめでとうございます
 
-You have increased the resources available to a virtual machine via Infrastructure as Code.
-You can imagine from this example how you might automate the resource reconfiguration from a IaC tool, or from a pipeline.
+Infrastructure as Code を使って仮想マシンのリソースを増やすことができました。
+この例から、IaC ツールやパイプラインからリソースの再構成を自動化する方法をイメージできるでしょう。

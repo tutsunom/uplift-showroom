@@ -1,55 +1,55 @@
-= Introducing UpLift and Shift
+= UpLift and Shift の紹介
 
-*Enhancing Legacy VMs with OpenShift Virtualization on Red Hat OpenShift on AWS*
+*Red Hat OpenShift on AWS で OpenShift Virtualization を活用し、レガシー VM を改善する*
 
-== Prerequisites
+== 前提条件
 
-All you need to enjoy this workshop is a recent web browser.
-We test it on Firefox, chromium, and Safari.
+このワークショップに必要なのは、最新の Web ブラウザだけです。
+Firefox、Chromium、Safari で動作確認を行っています。
 
-== Introduction
+== はじめに
 
-Welcome to the UpLift and Shift lab, where we explore how OpenShift Virtualization enables organizations to accelerate the migration of traditional virtual machines (VMs) to a modern, cloud-native platform.
-This hands-on experience demonstrates how you can transition VMs from current virtualization environments to a scalable and secure environment powered by Red Hat OpenShift Service on AWS—without sacrificing the stability and reliability you value.
+UpLift and Shift ラボへようこそ。このラボでは、OpenShift Virtualization を活用して従来の仮想マシン (VM) をモダンなクラウドネイティブプラットフォームへ移行する方法を体験します。
+このハンズオンでは、既存の仮想化環境から Red Hat OpenShift Service on AWS を基盤としたスケーラブルかつセキュアな環境へ VM を移行する手順を学びます。安定性と信頼性を損なうことなく移行を実現できます。
 
-As businesses seek alternatives to traditional virtualization platforms, many face the challenge of balancing speed, cost-efficiency, and modernization.
-Customers who have successfully migrated workloads to public clouds are often familiar with the traditional lift-and-shift approach of moving on-premises workloads to cloud environments.
-While this method simplifies the initial migration, it often presents two primary, often undesirable, options:
+従来の仮想化プラットフォームからの移行を検討する多くの企業は、スピード、コスト効率、モダナイゼーションのバランスという課題に直面しています。
+パブリッククラウドへのワークロード移行を経験済みの方は、オンプレミスのワークロードをクラウド環境に移す従来型の Lift and Shift アプローチをご存じでしょう。
+この方法は初期移行を簡素化しますが、多くの場合、次の 2 つの選択肢しか残りません。
 
-Application Modernization::
-Re-architect, rewrite, and re-platform legacy applications to align with modern service-oriented architectures.
-This process, while transformative, is *time-intensive and resource-heavy.*
+アプリケーションモダナイゼーション::
+レガシーアプリケーションをモダンなサービス指向アーキテクチャに合わせて再設計、書き換え、リプラットフォームするアプローチです。
+変革的ではありますが、*多大な時間とリソースを要します。*
 
 Lift and Shift::
-Quickly migrate VMs to the cloud with minimal changes.
-However, this approach often results in higher costs without unlocking the benefits of modern features or capabilities.
+最小限の変更で VM をクラウドへ迅速に移行するアプローチです。
+ただし、モダンな機能の恩恵を受けられず、コスト増につながることが多いです。
 
-The *UpLift and Shift* strategy offers a compelling alternative:
+*UpLift and Shift* 戦略は、これらに代わる魅力的な選択肢を提供します。
 
-Migrate VMs to Red Hat OpenShift Service on AWS, where they inherit modern platform features—such as scalability, self-service provisioning, and CI/CD pipeline integration—without requiring changes to the VMs themselves.
-This approach blends the speed and simplicity of lift-and-shift with the added value of advanced functionality, enabling legacy applications to evolve at their own pace.
+VM を Red Hat OpenShift Service on AWS に移行することで、スケーラビリティ、セルフサービスプロビジョニング、CI/CD パイプライン統合といったモダンなプラットフォーム機能を、VM 自体を変更することなく活用できます。
+このアプローチは、Lift and Shift のスピードとシンプルさに高度な機能の付加価値を加え、レガシーアプリケーションをそれぞれのペースで進化させられます。
 
-== Benefits of OpenShift Virtualization on AWS
+== AWS 上の OpenShift Virtualization のメリット
 
-*Red Hat OpenShift Virtualization*, available as part of Red Hat OpenShift Service on AWS, provides a fully managed platform to rehouse your VMs onto modern infrastructure without the burden of managing hardware in your datacenter.
-This hybrid cloud solution delivers consistent processes and tools for managing VMs across on-premises, cloud, and edge environments.
+*Red Hat OpenShift Virtualization* は、Red Hat OpenShift Service on AWS の一部として提供されるフルマネージドプラットフォームです。データセンターのハードウェア管理の負担なく、VM をモダンなインフラストラクチャに移行できます。
+このハイブリッドクラウドソリューションにより、オンプレミス、クラウド、エッジ環境にわたって、一貫したプロセスとツールで VM を管理できます。
 
-Key benefits include:
+主なメリット：
 
-* *Simplified Migration and Management*: Seamlessly move VMs off legacy platforms and onto a modern, managed infrastructure.
-* *Accelerated Time to Value*: Deploy VMs and integrate with CI/CD pipelines for improved efficiency.
-* *Hybrid Cloud Flexibility*: Operate VMs and containerized workloads consistently across diverse environments.
-* *Innovation at Your Pace*: Leverage OpenShift's cloud-native capabilities, such as container-based workloads and serverless applications, when you're ready to modernize.
-* *Managed Services*: Offload routine platform management to Red Hat and AWS experts, freeing IT teams to focus on strategic initiatives.
+* *移行と管理の簡素化*: レガシープラットフォームからモダンなマネージドインフラストラクチャへ、VM をシームレスに移行
+* *価値創出までの時間を短縮*: VM のデプロイと CI/CD パイプラインとの統合で効率を向上
+* *ハイブリッドクラウドの柔軟性*: 多様な環境にわたって VM とコンテナワークロードを一貫して運用
+* *自分のペースでイノベーション*: モダナイズの準備ができた段階で、コンテナベースのワークロードやサーバーレスアプリケーションなど、OpenShift のクラウドネイティブ機能を活用
+* *マネージドサービス*: 日常的なプラットフォーム管理を Red Hat と AWS のエキスパートに任せ、IT チームは戦略的な取り組みに集中
 
-By combining the ease of lift-and-shift with modern cloud-native features, *OpenShift Virtualization on AWS* accelerates your organization's journey to modernization, offering a unified operational experience for VMs and container applications across your cloud and on-prem environments.
+Lift and Shift の手軽さとモダンなクラウドネイティブ機能を組み合わせることで、*OpenShift Virtualization on AWS* は組織のモダナイゼーションを加速します。クラウドとオンプレミス環境にわたって、VM とコンテナアプリケーションを統一的に運用できます。
 
-This lab will guide you through the process of leveraging OpenShift Virtualization to "uplift" your VMs and unlock the potential of hybrid cloud infrastructure—empowering your team to innovate faster and deliver greater value.
+このラボでは、OpenShift Virtualization を活用して VM を「UpLift（アップリフト）」し、ハイブリッドクラウドインフラストラクチャの可能性を引き出す手順を体験します。チームがより速くイノベーションを起こし、より大きな価値を届けられるようになります。
 
-== Next Steps
+== 次のステップ
 
-If you would like to learn more about Red Hat OpenShift Virtualization, please visit
+Red Hat OpenShift Virtualization についてさらに詳しく知りたい方は、以下をご覧ください。
 
-* https://www.redhat.com/en/technologies/cloud-computing/openshift/virtualization[OpenShift Virtualization landing page]
-* https://docs.openshift.com/rosa/virt/getting_started/virt-getting-started.html[OpenShift Virtualization documentation^]
-* Watch some of our https://www.youtube.com/watch?v=7EpmmUIhQ7c[demo videos on YouTube^].
+* https://www.redhat.com/en/technologies/cloud-computing/openshift/virtualization[OpenShift Virtualization ランディングページ]
+* https://docs.openshift.com/rosa/virt/getting_started/virt-getting-started.html[OpenShift Virtualization ドキュメント^]
+* https://www.youtube.com/watch?v=7EpmmUIhQ7c[YouTube のデモ動画^]もぜひご覧ください。

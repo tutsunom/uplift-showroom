@@ -94,7 +94,7 @@ image:module-4-web-application.png[Web Application,float="none",align="left",lin
 +
 [,sh,role=execute]
 ----
-oc annotate route winmesh haproxy.router.openshift.io/disable_cookies='true'
+oc annotate route winmesh haproxy.router.openshift.io/disable_cookies='true' -n windowsmesh-{user}
 ----
 
 [[congratulations]]

@@ -48,8 +48,7 @@ Administrator パースペクティブに切り替えます。
 +
 image::module-1-administrator.png[Administrator perspective,link=self, window=blank, width=100%]
 
-おめでとうございます！
-これでログインが完了し、ワークショップを始める準備が整いました！
+これでログインが完了し、ワークショップを始める準備が整いました。
 
 [[operators]]
 == Operator の確認
@@ -66,9 +65,6 @@ OpenShift Virtualization はすでにデプロイ済みです。
 Virtualization Operator をクリックして、カスタムリソースと API を確認します。
 +
 image::module-1-operators-virt.png[Installed Operators,link=self, window=blank, width=100%]
-+
-OpenShift Virtualization はすでにデプロイ済みです。
-以下の手順で設定を確認します。
 +
 image::module1-virt-operator.png[OpenShift Virtualization Operator,link=self, window=blank, width=100%]
 

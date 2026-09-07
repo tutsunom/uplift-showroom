@@ -27,7 +27,7 @@ image::module-5-winweb01-console.png[Windows virtual machine console,link=self, 
 .PowerShell の起動
 image::module-5-powershell-01.png[Powershell Activation,link=self, window=blank, width=100%]
 +
-. 以下のコマンドを *コピー* し、*特殊な Paste ボタン* で仮想マシンコンソールに貼り付けます。
+. 以下のコマンドを *コピー* し、*Paste ボタン* で仮想マシンコンソールに貼り付けます。
 仮想マシンコンソールをクリックして *Enter* キーを押します。
 接続が成功し、`StatusCode: 200` と表示されることを確認します。
 +
@@ -86,7 +86,11 @@ image::module-5-powershell-curl-failure.png[Powershell cURL failure,link=self, w
 
 == No-Egress ポリシーの削除
 
-WARNING: ラボの終了前に、この NetworkPolicy を削除してください。VM のネットワーク接続が制限されたままになります。
+. 左側で *Networking -> NetworkPolicies* をクリックします。
+. `noegress` ポリシーの右側のメニュー（&#8942;）から *Delete NetworkPolicy* を選択します。
+. 確認ダイアログで *Delete* をクリックします。
+
+WARNING: ラボの終了前に、この NetworkPolicy を必ず削除してください。削除しないと VM のネットワーク接続が制限されたままになります。
 
 [[congratulations]]
 == まとめ

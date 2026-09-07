@@ -10,6 +10,7 @@ asciidoc:
     user: sample_username
     password: sample_password
     openshift_console_url: https://console-openshift-console.apps.rosa-sample.sample.p1.openshiftapps.com/
+    rosa_openshift_console_url: https://console-openshift-console.apps.rosa-sample.sample.p1.openshiftapps.com/
     kiali_url: https://kiali-istio-system.apps.rosa-sample.sample.p1.openshiftapps.com/
     release-version: master
     page-pagination: true

@@ -101,4 +101,4 @@ oc annotate route winmesh haproxy.router.openshift.io/disable_cookies='true'
 == まとめ
 
 このモジュールでは、Kubernetes の Service による内部ロードバランシングと、OpenShift の Route によるインターネット公開を体験しました。
-お疲れ様でした！次のモジュールに進みましょう。
+お疲れ様でした！時間に余裕がある方は、オプションの次のモジュールにもチャレンジしてみてください。

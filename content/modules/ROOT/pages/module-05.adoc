@@ -84,7 +84,7 @@ image::module-5-powershell-curl-failure.png[Powershell cURL failure,link=self, w
 
 == No-Egress ポリシーの削除
 
-WARNING: この NetworkPolicy を削除しないと、以降のラボが正しく機能しません。
+WARNING: ラボの終了前に、この NetworkPolicy を削除してください。VM のネットワーク接続が制限されたままになります。
 
 [[congratulations]]
 == おめでとうございます

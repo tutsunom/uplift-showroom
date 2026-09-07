@@ -5,4 +5,4 @@
 * xref:module-03.adoc[]
 * xref:module-04.adoc[]
 * xref:module-05.adoc[]
-* xref:module-06.adoc[]
+// * xref:module-06.adoc[]

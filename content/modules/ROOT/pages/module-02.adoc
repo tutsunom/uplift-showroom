@@ -152,7 +152,7 @@ VMware vMotion と同様に、OpenShift Virtualization でも VM を停止せず
 +
 image::module-02-gui/20_VM_Info_Node.png[link=self, window=blank, width=100%]
 
-. *Actions* メニューから *Migrate* を選択します。
+. *Actions* メニューから *Migrate -> Compute* を選択します。
 +
 image::module-02-gui/21_VM_Dialog_Migrate.png[link=self, window=blank, width=100%]
 

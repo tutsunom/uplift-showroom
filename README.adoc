@@ -1,3 +1,11 @@
+== 日本語化の方法
+ラボ環境のbastionへSSHログイン後、以下のコマンドで翻訳スクリプトを実行ください。
+
+[source,bash,role=execute,subs="attributes"]
+----
+curl -sSL https://gist.githubusercontent.com/tutsunom/2ea88c52340eda937f5cd7267714ee56/raw/fa8e35f4ea6e7ce7aef2bea7b86f2fc5d77230fa/rosa-ws-translation.sh | bash
+----
+
 === Getting Started
 
 This template is designed to be used as a base for your showroom lab guides.

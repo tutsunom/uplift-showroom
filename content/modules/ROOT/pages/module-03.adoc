@@ -8,6 +8,18 @@ OpenShift 上で動作する VM の構成も同様です。
 
 このモジュールでは、あらゆる IaC システムで容易に採用できる手法を使って、VM に割り当てる CPU リソースを増やします。
 
+[[start_vms]]
+== 仮想マシンの起動
+
+このモジュール以降で使用する 3 台の Windows VM はまだ停止しています。まずこれらを起動しましょう。
+
+. 左側のバーで *Virtualization -> VirtualMachines* をクリックし、上部のバーで *Project `windowsmesh-{user}`* を選択します。
+. `database`、`winweb01`、`winweb02` の 3 台の VM が *Stopped* 状態であることを確認します。
+. 各 VM の右側のメニュー（&#8942;）から *Start* を選択し、3 台すべてを起動します。
+. 3 台すべてが *Running* 状態になるまで待ちます。
+
+NOTE: Windows VM の起動には 1〜2 分かかる場合があります。
+
 [[validating]]
 == 初期 CPU コア数の確認
 

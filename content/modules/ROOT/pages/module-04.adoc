@@ -55,7 +55,7 @@ spec:
         resources:
           requests:
             storage: 90Gi
-  running: true
+  runStrategy: RerunOnFailure
   template:
     metadata:
       labels:
@@ -144,9 +144,11 @@ image::module-3-provisioning.png[winweb03 - Provisioning,link=self, window=blank
 image::module-3-running.png[winweb03 - Running,link=self, window=blank, width=100%]
 
 [[deleting]]
-== 仮想マシンの削除
+== 仮想マシンの停止と削除
 
-. ワークショップクラスターのリソースを確保するため、新しい仮想マシンを *削除* してください。
+. ワークショップクラスターのリソースを確保するため、まず仮想マシンを *停止* します。
+.. `winweb03` の画面で *Actions -> Stop* をクリックし、VM が *Stopped* 状態になるのを待ちます。
+. VM が停止したら、*削除* します。
 .. *Actions -> Delete* をクリックし、確認ダイアログで *Delete* をクリックしてリソースを解放します。
 +
 .仮想マシンの削除を確認

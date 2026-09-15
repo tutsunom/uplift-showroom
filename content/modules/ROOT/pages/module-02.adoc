@@ -143,12 +143,7 @@ image::module-02-gui/19_VM_Actions_Paused.png[link=self, window=blank, width=100
 
 VMware vMotion と同様に、OpenShift Virtualization でも VM を停止せずに別のノードに移行できます。
 
-. *Overview* タブに移動します。
-+
-[NOTE]
-====
-ワークショップのユーザーはクラスター管理者ではないため、VM の稼働ノード名は表示されません。下記のスクリーンショットは管理者で表示した例です。ただし、マイグレーション自体は実行可能です。
-====
+. *Overview* タブに移動し、VM が稼働しているノード名を確認します。
 +
 image::module-02-gui/20_VM_Info_Node.png[link=self, window=blank, width=100%]
 
@@ -156,7 +151,7 @@ image::module-02-gui/20_VM_Info_Node.png[link=self, window=blank, width=100%]
 +
 image::module-02-gui/21_VM_Dialog_Migrate.png[link=self, window=blank, width=100%]
 
-. VM のステータスが *Migrating* に変わり、数秒後に *Running* に戻ります。ライブマイグレーションが完了しました。
+. VM のステータスが *Migrating* に変わり、数秒後に *Running* に戻ります。*Overview* タブでノード名が変わっていることを確認してください。VM を停止せずに別のノードへ移行できたことがわかります。
 +
 image::module-02-gui/22_Migrated.png[link=self, window=blank, width=100%]
 
